@@ -182,8 +182,8 @@ logmodel.fit(X_train,y_train)
 # In[27]:
 
 
-print(f"Training Data Score: {logmodel.score(X_train, y_train)}")
-print(f"Testing Data Score: {logmodel.score(X_test, y_test)}")
+# print(f"Training Data Score: {logmodel.score(X_train, y_train)}")
+# print(f"Testing Data Score: {logmodel.score(X_test, y_test)}")
 
 
 # In[28]:
