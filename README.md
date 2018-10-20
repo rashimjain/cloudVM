@@ -1,2 +1,1 @@
-# cloudVM
-Azure repo
+# Cloud-Tests-
