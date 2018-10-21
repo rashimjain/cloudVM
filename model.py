@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[3]:
+# In[1]:
 
 
 import re
@@ -19,57 +19,73 @@ from sklearn.metrics import make_scorer, accuracy_score
 from sklearn.model_selection import GridSearchCV
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
 
 
-# In[4]:
+# In[2]:
 
 
-df = pd.read_csv('kiva_loans_20181020.csv')
-df.head()
+df = pd.read_csv('kiva_loans_20181016_20percent data.csv')
+df.head(300)
 
 
-# In[5]:
+# In[3]:
 
 
 df.shape
 
 
-# In[6]:
+# In[4]:
 
 
 df.status.value_counts()
 
 
-# In[7]:
+# In[5]:
 
 
 df.dtypes
 
 
-# In[8]:
+# In[6]:
 
 
 df.isnull().sum()
 
 
-# In[9]:
+# In[7]:
 
 
 df1 = df[['status','funded_amount', 'loan_amount', 'activity', 'sector',  'country',
          'currency','gender','term_in_months']]
 
 
-# In[10]:
+# In[8]:
 
 
 df1.head(2)
 
 
-# In[11]:
+# In[9]:
 
 
 df2 = df1.dropna()
 df2 = df2.drop(['term_in_months', 'currency'], axis=1)
+df2.head()
+
+
+# In[10]:
+
+
+df2.shape
+
+
+# In[11]:
+
+
+# Use Pandas get_dummies to convert categorical data
+
+df2 = pd.get_dummies(df2)
 df2.head()
 
 
@@ -82,218 +98,101 @@ df2.shape
 # In[13]:
 
 
-# Use Pandas get_dummies to convert categorical data
+X = df2.drop(['status', 'loan_amount', 'funded_amount'], axis=1)
+feature_names = X.columns
+y = df2['status']
 
-df2 = pd.get_dummies(df2)
-df2.head()
 
+# # The k-nearest neighbors algorithm (KNN)
 
 # In[14]:
 
 
-df2.shape
+from sklearn.neighbors import KNeighborsClassifier
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
 
 
 # In[15]:
 
 
-X = df2.drop(['status', 'loan_amount', 'funded_amount'], axis=1)
-y = df2['status']
+# Loop through different k values to see which has the highest accuracy
+# Note: We only use odd numbers because we don't want any ties
+train_scores = []
+test_scores = []
+a = 3000
+b = 6000
+for k in range(a, b, 500):
+    knn = KNeighborsClassifier(n_neighbors=k, n_jobs=-1)
+    knn.fit(X_train, y_train)
+    train_score = knn.score(X_train, y_train)
+    test_score = knn.score(X_test, y_test)
+    train_scores.append(train_score)
+    test_scores.append(test_score)
+    print(f"k: {k}, Train/Test Score: {train_score:.3f}/{test_score:.3f}")
+    
+    
+plt.plot(range(a, b, 500), train_scores, marker='o')
+plt.plot(range(a, b, 500), test_scores, marker="x")
+plt.xlabel("k neighbors")
+plt.ylabel("Testing accuracy Score")
+plt.show()
 
 
-# In[16]:
+# In[ ]:
 
 
-ss = StandardScaler()
-lr = LogisticRegression()
-lr_pipe = Pipeline([('sscale', ss), ('logreg', lr)])
+# Note that k: XXXX seems to be the best choice for this dataset
+knn = KNeighborsClassifier(n_neighbors=8000)
+knn.fit(X_train, y_train)
+print('k=8000 Test Acc: %.3f' % knn.score(X_test, y_test))
 
 
 # In[17]:
 
 
-lr_pipe.fit(X, y)
+predictions = knn.predict(X_test)
 
 
 # In[18]:
-
-
-lr_pipe.score(X,y)
-
-
-# # Divide the dataset into separate training (80% of the data) and test (20% of the data) datasets.
-
-# In[19]:
-
-
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20)
-
-
-# # Chain the StandardScaler and Logistic Regression objects in a pipeline.
-
-# In[20]:
-
-
-lr_pipe.fit(X_train, y_train)
-
-
-# In[21]:
-
-
-lr_pipe.score(X_test, y_test)  # prediction accuracy score
-
-
-# In[22]:
-
-
-lr_pipe.score(X_train, y_train)
-
-
-# In[23]:
-
-
-y_pred = lr_pipe.predict(X_test)
-
-
-# In[24]:
-
-
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, classification_report, confusion_matrix
-
-
-# In[25]:
-
-
-print(f1_score(y_test, y_pred, average="macro"))
-print(precision_score(y_test, y_pred, average="macro"))
-print(recall_score(y_test, y_pred, average="macro")) 
-
-
-# # Alternative way of executing the Lograthmic Model. Lograthmic models don't require scaling.
-
-# In[26]:
-
-
-from sklearn.linear_model import LogisticRegression
-logmodel = LogisticRegression()
-logmodel.fit(X_train,y_train)
-
-
-# In[27]:
-
-
-# print(f"Training Data Score: {logmodel.score(X_train, y_train)}")
-# print(f"Testing Data Score: {logmodel.score(X_test, y_test)}")
-
-
-# In[28]:
-
-
-predictions = logmodel.predict(X_test)
-
-
-# # 1 - Logistic Model Score
-
-# In[29]:
 
 
 from sklearn.metrics import classification_report
 print(classification_report(y_test,predictions))
 
 
-# In[30]:
+# In[19]:
 
 
 df4 = pd.DataFrame({"Prediction": predictions, "Actual": y_test}).reset_index(drop=True)
 
 
-# In[31]:
+# In[20]:
 
 
-df4.head(10)
+df4.head(50)
 
 
-# # Statistical Testing of the model for significance of independedent variables 
+# # Passing Real Time Feature Data for Testing on the Model.
 
-# In[32]:
-
-
-import numpy as np
-from sklearn import datasets, linear_model
-from sklearn.linear_model import LinearRegression
-import statsmodels.api as sm # conda install statsmodels - if there is an error
-from scipy import stats
+# In[ ]:
 
 
+inputs = {'country_India' : 1, 'gender_male' : 1, 'activity_Agriculture' : 1}
 
-X2 = sm.add_constant(X_train)
-est = sm.OLS(y_train, X2)
-est2 = est.fit()
-print(est2.summary())
-
-
-# In[33]:
-
-
-X2 = sm.add_constant(X_test)
-est = sm.OLS(y_test, X2)
-est2 = est.fit()
-print(est2.summary())
+test = pd.Series(index=df2.columns)
+for key in inputs.keys():
+    test[key] = inputs[key]
+    
+test.fillna(0, inplace=True)
 
 
-# In[34]:
+# In[ ]:
 
 
-df_activity = df[['status', 'activity']]
-df_activity = df_activity.dropna()
-df_activity.head()
+test1 = test.drop(['status','loan_amount', 'funded_amount'])
 
-
-# In[35]:
-
-
-df_activity.shape
-
-
-# In[36]:
-
-
-df_activity = pd.get_dummies(df_activity)
-df_activity.head()
-
-
-# In[37]:
-
-
-X = df_activity.drop(['status'], axis=1)
-y = df_activity['status']
-
-
-# In[38]:
-
-
-lm = LogisticRegression()
-lm.fit(X,y)
-params = np.append(lm.intercept_,lm.coef_)
-predictions = lm.predict(X)
-
-params = np.round(params,4)
-
-myDF3 = pd.DataFrame()
-index = [0]
-params = np.delete(params, index)
-
-myDF3["Activity_Feature_Name"],myDF3["Activity_Coefficients"] = [X.columns,params]
-print(myDF3)
-
-
-# In[88]:
-
-
-keys = [i.replace('activity_', '') for i in df_activity.columns[1:]]
-activity_features = dict(zip(keys, myDF3.Activity_Coefficients.values))
-
-activity_coef = [activity_features[i] for i in df.activity.values]
-df['activity_coef'] = activity_coef
-df
+predictions = knn.predict_proba(test1.values.reshape(1, -1))
+print (predictions)
 
