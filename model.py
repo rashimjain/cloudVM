@@ -130,7 +130,7 @@ for k in range(a, b, 500):
     test_score = knn.score(X_test, y_test)
     train_scores.append(train_score)
     test_scores.append(test_score)
-    print(f"k: {k}, Train/Test Score: {train_score:.3f}/{test_score:.3f}")
+    print(f'k: {k}, Train/Test Score: {train_score:.3f}/{test_score:.3f}')
     
     
 plt.plot(range(a, b, 500), train_scores, marker='o')
