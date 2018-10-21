@@ -25,7 +25,7 @@ from sklearn.neighbors import KNeighborsClassifier
 # In[2]:
 
 
-df = pd.read_csv('kiva_loans_20181016_20percent data.csv')
+df = pd.read_csv('kiva_loans_20181016_20percent_data.csv')
 df.head(300)
 
 
